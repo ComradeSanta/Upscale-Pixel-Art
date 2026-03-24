@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixel Art Upscaler</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+    h1 { font-size: 1.2rem; margin-bottom: 1.5rem; color: #fff; }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    label { font-size: 0.9rem; }
+    input[type="range"] {
+      width: 200px;
+      accent-color: #6cf;
+    }
+    #scaleValue { color: #6cf; min-width: 2ch; }
+    #downloadBtn {
+      padding: 0.5rem 1rem;
+      background: #333;
+      border: 1px solid #555;
+      color: #fff;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    #downloadBtn:hover { background: #444; }
+    #downloadBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .container {
+      position: relative;
+      border: 1px dashed #333;
+      max-width: 100%;
+      overflow: auto;
+      max-height: 60vh;
+    }
+    canvas { display: block; image-rendering: pixelated; }
+    #originalPreview {
+      position: absolute;
+      top: 0; left: 0;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+      image-rendering: pixelated;
+      max-width: none;
+    }
+    .container:hover #originalPreview { opacity: 0.3; }
+    input[type="file"] { margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Pixel Art Upscaler</h1>
+
+  <input type="file" id="upload" accept="image/*">
+
+  <div class="controls">
+    <label>Scale:</label>
+    <input type="range" id="scaleSlider" min="1" max="16" value="4">
+    <span id="scaleValue">4x</span>
+    <button id="downloadBtn" disabled>Download</button>
+  </div>
+
+  <div class="container">
+    <canvas id="canvas"></canvas>
+    <img id="originalPreview" alt="">
+  </div>
+
+  <script>
+    const upload = document.getElementById('upload');
+    const scaleSlider = document.getElementById('scaleSlider');
+    const scaleValue = document.getElementById('scaleValue');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const originalPreview = document.getElementById('originalPreview');
+
+    let originalImage = null;
+    let currentScale = 4;
+
+    scaleSlider.addEventListener('input', () => {
+      currentScale = parseInt(scaleSlider.value);
+      scaleValue.textContent = currentScale + 'x';
+      if (originalImage) render();
+    });
+
+    upload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const img = new Image();
+      img.onload = () => {
+        originalImage = img;
+        originalPreview.src = img.src;
+        originalPreview.style.width = img.width + 'px';
+        downloadBtn.disabled = false;
+        render();
+      };
+      img.src = URL.createObjectURL(file);
+    });
+
+    function render() {
+      if (!originalImage) return;
+
+      const w = originalImage.width * currentScale;
+      const h = originalImage.height * currentScale;
+
+      canvas.width = w;
+      canvas.height = h;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(originalImage, 0, 0, w, h);
+    }
+
+    downloadBtn.addEventListener('click', () => {
+      if (!originalImage) return;
+
+      const link = document.createElement('a');
+      link.download = 'upscaled_' + currentScale + 'x.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  </script>
+</body>
+</html>
