@@ -10,7 +10,7 @@
                                                                                                         
   ## Usage
                                                                                                         
-  Open upscalepixel.art or download and open `index.html` directly in your browser                                                                  
+  Open [upscalepixel.art](upscalepixel.art) or download and open `index.html` directly in your browser                                                                  
    
   ## How to Use                                                                                         
                   
