@@ -6,130 +6,352 @@
   <title>Pixel Art Upscaler</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
-      font-family: system-ui, sans-serif;
-      background: #1a1a1a;
-      color: #e0e0e0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0F172A;
+      color: #e2e8f0;
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
       padding: 2rem;
     }
-    h1 { font-size: 1.2rem; margin-bottom: 1.5rem; color: #fff; }
-    .controls {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
+
+    .card {
+      background: #1E293B;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #f8fafc;
+    }
+
+    /* Drag & Drop Zone */
+    .drop-zone {
+      border: 2px dashed #475569;
+      border-radius: 8px;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
       margin-bottom: 1.5rem;
     }
-    label { font-size: 0.9rem; }
-    input[type="range"] {
-      width: 200px;
-      accent-color: #6cf;
+
+    .drop-zone:hover,
+    .drop-zone.dragover {
+      border-color: #38BDF8;
+      background: rgba(56, 189, 248, 0.05);
     }
-    #scaleValue { color: #6cf; min-width: 2ch; }
-    #downloadBtn {
-      padding: 0.5rem 1rem;
-      background: #333;
-      border: 1px solid #555;
-      color: #fff;
-      cursor: pointer;
-      border-radius: 4px;
+
+    .drop-zone input[type="file"] {
+      display: none;
     }
-    #downloadBtn:hover { background: #444; }
-    #downloadBtn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .container {
+
+    .drop-zone .icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .drop-zone p {
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+
+    .drop-zone .hint {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+
+    /* Slider */
+    .slider-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .slider-label {
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+
+    .slider-value {
+      font-size: 0.875rem;
+      color: #38BDF8;
+      font-weight: 600;
+    }
+
+    .slider-track {
       position: relative;
-      border: 1px dashed #333;
-      max-width: 100%;
-      overflow: auto;
-      max-height: 60vh;
+      height: 4px;
+      background: #334155;
+      border-radius: 2px;
+      margin: 0 0.5rem;
     }
-    canvas { display: block; image-rendering: pixelated; }
-    #originalPreview {
-      position: absolute;
-      top: 0; left: 0;
-      opacity: 0;
-      transition: opacity 0.2s;
-      pointer-events: none;
+
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: #64748b;
+      margin-top: 0.5rem;
+      padding: 0 0.5rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
+      margin: 0;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 4px;
+      background: linear-gradient(to right, #38BDF8 0%, #38BDF8 var(--progress, 20%), #334155 var(--progress, 20%), #334155 100%);
+      border-radius: 2px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: #38BDF8;
+      border-radius: 50%;
+      margin-top: -7px;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 4px;
+      background: #334155;
+      border-radius: 2px;
+    }
+
+    input[type="range"]::-moz-range-progress {
+      height: 4px;
+      background: #38BDF8;
+      border-radius: 2px;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      background: #38BDF8;
+      border-radius: 50%;
+      border: none;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+    }
+
+    /* Download Button */
+    #downloadBtn {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: transparent;
+      border: 1px solid #4ADE80;
+      color: #4ADE80;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+      margin-bottom: 1.5rem;
+    }
+
+    #downloadBtn:hover:not(:disabled) {
+      background: rgba(74, 222, 128, 0.1);
+    }
+
+    #downloadBtn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* Preview */
+    .preview-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    .preview-container {
+      border: 1px solid #334155;
+      border-radius: 6px;
+      overflow: hidden;
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0F172A;
+    }
+
+    .preview-container canvas {
+      display: block;
       image-rendering: pixelated;
-      max-width: none;
+      max-width: 100%;
+      max-height: 320px;
     }
-    .container:hover #originalPreview { opacity: 0.3; }
-    input[type="file"] { margin-bottom: 1rem; }
+
+    .preview-empty {
+      color: #475569;
+      font-size: 0.875rem;
+    }
   </style>
 </head>
 <body>
-  <h1>Pixel Art Upscaler</h1>
+  <div class="card">
+    <h1>Pixel Art Upscaler</h1>
 
-  <input type="file" id="upload" accept="image/*">
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="upload" accept="image/*">
+      <div class="icon">📁</div>
+      <p>Drop your pixel art here</p>
+      <p class="hint">or click to browse</p>
+    </div>
 
-  <div class="controls">
-    <label>Scale:</label>
-    <input type="range" id="scaleSlider" min="1" max="16" value="4">
-    <span id="scaleValue">4x</span>
-    <button id="downloadBtn" disabled>Download</button>
-  </div>
+    <div class="slider-group">
+      <div class="slider-header">
+        <span class="slider-label">Upscale Factor</span>
+        <span class="slider-value" id="scaleValue">4x</span>
+      </div>
+      <input type="range" id="scaleSlider" min="1" max="15" value="4">
+      <div class="slider-labels">
+        <span>1x</span>
+        <span>15x</span>
+      </div>
+    </div>
 
-  <div class="container">
-    <canvas id="canvas"></canvas>
-    <img id="originalPreview" alt="">
+    <button id="downloadBtn" disabled>Download PNG</button>
+
+    <div class="preview-label">Preview</div>
+    <div class="preview-container" id="previewContainer">
+      <span class="preview-empty" id="emptyState">No image loaded</span>
+      <canvas id="canvas"></canvas>
+    </div>
   </div>
 
   <script>
+    const dropZone = document.getElementById('dropZone');
     const upload = document.getElementById('upload');
     const scaleSlider = document.getElementById('scaleSlider');
     const scaleValue = document.getElementById('scaleValue');
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const downloadBtn = document.getElementById('downloadBtn');
-    const originalPreview = document.getElementById('originalPreview');
+    const emptyState = document.getElementById('emptyState');
 
+    // Hidden canvas for full-resolution upscaled export
+    const exportCanvas = document.createElement('canvas');
+    const exportCtx = exportCanvas.getContext('2d');
+
+    const DISPLAY_MAX = 512;
     let originalImage = null;
     let currentScale = 4;
 
-    scaleSlider.addEventListener('input', () => {
-      currentScale = parseInt(scaleSlider.value);
-      scaleValue.textContent = currentScale + 'x';
-      if (originalImage) render();
+    function updateSliderProgress() {
+      const progress = ((currentScale - 1) / 14) * 100;
+      scaleSlider.style.setProperty('--progress', progress + '%');
+    }
+
+    dropZone.addEventListener('click', () => upload.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        loadImage(file);
+      }
     });
 
     upload.addEventListener('change', (e) => {
       const file = e.target.files[0];
-      if (!file) return;
+      if (file) loadImage(file);
+    });
 
+    scaleSlider.addEventListener('input', () => {
+      currentScale = parseInt(scaleSlider.value);
+      scaleValue.textContent = currentScale + 'x';
+      updateSliderProgress();
+    });
+
+    function loadImage(file) {
       const img = new Image();
       img.onload = () => {
         originalImage = img;
-        originalPreview.src = img.src;
-        originalPreview.style.width = img.width + 'px';
+        emptyState.style.display = 'none';
         downloadBtn.disabled = false;
-        render();
+        renderDisplay();
       };
       img.src = URL.createObjectURL(file);
-    });
+    }
 
-    function render() {
+    // Render original image to display canvas, capped for preview
+    function renderDisplay() {
       if (!originalImage) return;
 
-      const w = originalImage.width * currentScale;
-      const h = originalImage.height * currentScale;
+      let dw = originalImage.width;
+      let dh = originalImage.height;
 
-      canvas.width = w;
-      canvas.height = h;
+      if (dw > DISPLAY_MAX || dh > DISPLAY_MAX) {
+        const ratio = Math.min(DISPLAY_MAX / dw, DISPLAY_MAX / dh);
+        dw = Math.round(dw * ratio);
+        dh = Math.round(dh * ratio);
+      }
+
+      canvas.width = dw;
+      canvas.height = dh;
       ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(originalImage, 0, 0, w, h);
+      ctx.drawImage(originalImage, 0, 0, dw, dh);
     }
 
     downloadBtn.addEventListener('click', () => {
       if (!originalImage) return;
 
+      const w = originalImage.width * currentScale;
+      const h = originalImage.height * currentScale;
+      exportCanvas.width = w;
+      exportCanvas.height = h;
+      exportCtx.imageSmoothingEnabled = false;
+      exportCtx.drawImage(originalImage, 0, 0, w, h);
+
       const link = document.createElement('a');
       link.download = 'upscaled_' + currentScale + 'x.png';
-      link.href = canvas.toDataURL('image/png');
+      link.href = exportCanvas.toDataURL('image/png');
       link.click();
     });
+
+    updateSliderProgress();
   </script>
 </body>
 </html>
